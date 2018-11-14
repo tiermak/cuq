@@ -39,6 +39,7 @@ void threadStart(GPUTasksQueue *queue, int device) {
   cudaDeviceReset();
 }
 
+//TODO handle case when there are no devicesCount free devices available
 void processTasks(GPUTask ** tasks, int taskCount, int devicesCount) {
   //create a queue of GPU tasks (which is thread safe internally)
   GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount);
