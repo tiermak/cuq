@@ -25,6 +25,9 @@ add_library(cuq SHARED
 
 target_compile_features(cuq PUBLIC cxx_std_11)
 
+install(TARGETS cuq DESTINATION lib)
+install(FILES include/cuq.h DESTINATION include)
+
 add_executable(concurrent_gpu_test
   examples/concurrent_gpu_demo.cu
 )

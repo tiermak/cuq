@@ -40,6 +40,7 @@ void threadStart(GPUTasksQueue *queue, int device) {
 }
 
 //TODO handle case when there are no devicesCount free devices available
+extern "C"
 void processTasks(GPUTask ** tasks, int taskCount, int devicesCount) {
   //create a queue of GPU tasks (which is thread safe internally)
   GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount);
@@ -56,4 +57,10 @@ void processTasks(GPUTask ** tasks, int taskCount, int devicesCount) {
 
   delete[] threads;
   delete queue;
+}
+
+extern "C"
+void deleteTasks(GPUTask** tasks, int taskCount) {
+  for (int i = 0; i < taskCount; i++)
+    delete tasks[i];
 }
