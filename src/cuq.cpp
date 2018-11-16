@@ -58,3 +58,9 @@ void processTasks(GPUTask ** tasks, int taskCount, int devicesCount) {
   delete[] threads;
   delete queue;
 }
+
+extern "C"
+void deleteTasks(GPUTask** tasks, int taskCount) {
+  for (int i = 0; i < taskCount; i++)
+    delete tasks[i];
+}

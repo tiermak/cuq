@@ -20,3 +20,6 @@ class GPUTasksQueue {
 
 extern "C"
 void processTasks(GPUTask** tasks, int taskCount, int devicesCount);
+
+extern "C"
+void deleteTasks(GPUTask** tasks, int taskCount);
