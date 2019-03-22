@@ -11,15 +11,20 @@ class GPUTask {
 
 class GPUTasksQueue {
   public:
+    bool resetDeviceAfterFinish;
+    bool deleteTasksAutomatically;
     bool processNext();
-    GPUTasksQueue(GPUTask** tasks, int tasksCount);
+    GPUTasksQueue(GPUTask** tasks, int tasksCount, bool _resetDeviceAfterFinish = true, bool _deleteTasksAutomatically = false);
   private:
     std::mutex queueMutex;
     std::queue<GPUTask*> tasksQueue;
 };
 
 extern "C"
-void processTasks(GPUTask** tasks, int taskCount, int devicesCount);
+void processTasks(
+  GPUTask ** tasks, int taskCount, 
+  int * devices, int devicesCount, 
+  bool resetDeviceAfterFinish = true, bool deleteTasksAutomatically = false);
 
 extern "C"
 void deleteTasks(GPUTask** tasks, int taskCount);

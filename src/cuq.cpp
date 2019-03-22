@@ -20,12 +20,18 @@ bool GPUTasksQueue::processNext() {
   
   nextTask->doWork();
 
+  if (deleteTasksAutomatically)
+    delete nextTask;
+
   return true;
 }
 
-GPUTasksQueue::GPUTasksQueue(GPUTask ** tasks, int tasksCount) {
+GPUTasksQueue::GPUTasksQueue(GPUTask ** tasks, int tasksCount, bool _resetDeviceAfterFinish, bool _deleteTasksAutomatically) {
   for (int i = 0; i < tasksCount; i++)
     tasksQueue.push(tasks[i]);
+  
+  resetDeviceAfterFinish = _resetDeviceAfterFinish;
+  deleteTasksAutomatically = _deleteTasksAutomatically;
 }
 
 void threadStart(GPUTasksQueue *queue, int device) {
@@ -36,20 +42,24 @@ void threadStart(GPUTasksQueue *queue, int device) {
   while(queue->processNext()) {};
 
   //release device
-  cudaDeviceReset();
+  if (queue->resetDeviceAfterFinish)
+    cudaDeviceReset();
 }
 
-//TODO handle case when there are no devicesCount free devices available
 extern "C"
-void processTasks(GPUTask ** tasks, int taskCount, int devicesCount) {
+void processTasks(
+  GPUTask ** tasks, int taskCount, 
+  int * devices, int devicesCount, 
+  bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+
   //create a queue of GPU tasks (which is thread safe internally)
-  GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount);
+  GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount, resetDeviceAfterFinish, deleteTasksAutomatically);
 
   std::thread * threads = new std::thread[devicesCount];
 
   //start one thread per device
   for (int d = 0; d < devicesCount; d++)
-    threads[d] = std::thread(threadStart, queue, d);
+    threads[d] = std::thread(threadStart, queue, devices[d]);
 
   //wait all threads to finish
   for (int d = 0; d < devicesCount; d++)
