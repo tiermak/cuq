@@ -89,7 +89,7 @@ int pow(int a, int b) {
 int main(int argc, char *argv[]) {
   int devicesCount;
   if (argc <= 1)
-    devicesCount = 2;
+    devicesCount = 1;
   else 
     devicesCount = std::stoi(argv[1]);
   

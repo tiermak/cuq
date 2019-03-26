@@ -37,7 +37,7 @@ GPUTasksQueue::GPUTasksQueue(GPUTask ** tasks, int tasksCount, bool _resetDevice
 void threadStart(GPUTasksQueue *queue, int device) {
   //assign current thread to device
   cudaSetDevice(device);
-  
+
   //pull tasks until all of them are finished
   while(queue->processNext()) {};
 
@@ -58,8 +58,10 @@ void processTasks(
   std::thread * threads = new std::thread[devicesCount];
 
   //start one thread per device
-  for (int d = 0; d < devicesCount; d++)
-    threads[d] = std::thread(threadStart, queue, devices[d]);
+  for (int d = 0; d < devicesCount; d++) {
+    int device = devices[d];
+    threads[d] = std::thread(threadStart, queue, device);
+  }
 
   //wait all threads to finish
   for (int d = 0; d < devicesCount; d++)
