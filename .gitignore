@@ -56,3 +56,9 @@ build
 # Local scripts for rsync and remote run
 rsync_exclude.txt
 run_remote.sh
+
+#Conan generated files
+conanbuildinfo.txt
+conanbuildinfo.cmake
+conaninfo.txt
+graph_info.json
