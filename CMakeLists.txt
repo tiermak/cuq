@@ -31,21 +31,6 @@ add_library(cuq SHARED
   )
 target_link_libraries(cuq CONAN_PKG::boost rt cudart nvidia-ml)
 
-
-
-# add_executable(deviceSelection
-#   src/device_selection.cu
-# )
-# set_target_properties( deviceSelection
-#                        PROPERTIES CUDA_SEPARABLE_COMPILATION ON
-#                        POSITION_INDEPENDENT_CODE ON
-#                       )
-# target_link_libraries(deviceSelection PRIVATE CONAN_PKG::boost rt cudart nvidia-ml)
-
-
-
-
-
 install(TARGETS cuq DESTINATION lib)
 install(FILES include/cuq.h DESTINATION include)
 
@@ -57,5 +42,10 @@ set_target_properties( concurrent_gpu_test
                        POSITION_INDEPENDENT_CODE ON
                       )
 target_link_libraries(concurrent_gpu_test PRIVATE cudart cuq)
+
+#
+# Tests sub directory
+#
+add_subdirectory(tests)
 
 # set(CMAKE_BUILD_TYPE Debug)

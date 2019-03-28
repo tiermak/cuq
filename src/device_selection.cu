@@ -1,5 +1,5 @@
 #include <iostream>
-#include <set>
+#include <vector>
 #include <string>
 #include <sstream>
 #include <unistd.h>
@@ -28,7 +28,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line) {
 using namespace std;
 using namespace boost::interprocess;
 
-set<int> getAllPhysicallyAvailableDevices() {
+vector<int> getAllPhysicallyAvailableDevices() {
 
   unsigned int i, n;
   NVML( nvmlInit() );
@@ -38,7 +38,7 @@ set<int> getAllPhysicallyAvailableDevices() {
     throw std::runtime_error(msg);
   }
 
-  set<int> res;
+  vector<int> res;
 
   int currentPid = getpid();
 
@@ -49,13 +49,13 @@ set<int> getAllPhysicallyAvailableDevices() {
     NVML( nvmlDeviceGetHandleByIndex(i, &dev) );
     NVML( nvmlDeviceGetComputeRunningProcesses(dev, &num_procs, procs) );
     if (num_procs < 1) {
-      res.insert(i);
+      res.push_back(i);
       // cout << "getAllPhysicallyAvailableDevices:, i: " << i << endl;
     } else {
       //also add deviceIdx if current process occupied this device already
       for (int p = 0; p < num_procs; p++){
         if (procs[p].pid == currentPid)
-          res.insert(i);
+          res.push_back(i);
       }
     }
   }
@@ -63,8 +63,8 @@ set<int> getAllPhysicallyAvailableDevices() {
   return res;
 }
 
-set<int> readCudaVisibleDevices() {
-  set<int> res;
+vector<int> readCudaVisibleDevices() {
+  vector<int> res;
 
   auto rawValue = std::getenv("CUDA_VISIBLE_DEVICES");
 
@@ -79,7 +79,7 @@ set<int> readCudaVisibleDevices() {
 
   int i;
   while (ss >> i){
-    res.insert(i);
+    res.push_back(i);
 
     // cout << "readCudaVisibleDevices:, i: " << i << endl;
 
@@ -90,8 +90,8 @@ set<int> readCudaVisibleDevices() {
   return res;
 }
 
-set<int> getAvailableDevices() {
-  set<int> visibleDevices = readCudaVisibleDevices();
+vector<int> getAvailableDevices() {
+  vector<int> visibleDevices = readCudaVisibleDevices();
 
   if (visibleDevices.empty())
     return getAllPhysicallyAvailableDevices();
@@ -106,7 +106,7 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
   scoped_lock<named_mutex> lock(mutex, try_to_lock);
 
   try {
-    set<int> availableDevcices = getAvailableDevices();
+    vector<int> availableDevcices = getAvailableDevices();
 
     if ((int)availableDevcices.size() < requestedDevicesCount) {
       string msg = "There are not as many free devices as requested. Requested devices count: " 
@@ -118,8 +118,8 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
     }
 
     int nextDeviceIdx = 0;
-    for (auto it = availableDevcices.begin(); it != availableDevcices.end(); ++it) {
-      int deviceIdx = *it;
+    for (int i = 0; i < requestedDevicesCount; i++) {
+      int deviceIdx = availableDevcices[i];
       gpuErrchk( cudaSetDevice(deviceIdx), deviceIdx, errorMsg );
 
       //call some API functions to really occupy device (I'm lazy to look for more elegant way to do it)
@@ -137,32 +137,3 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
 
   return 0;
 }
-
-// #include <chrono>
-// #include <thread>
-
-// int main() {
-//   cout << "startred..." << endl;
-
-//   int devicesIdxs[32];
-//   char msg[1000] = "";
-  
-//   int res = occupyDevices(1, devicesIdxs, msg);
-
-//   cout << "res: " << res << " msg: " << string(msg) << endl;
-
-//   cout << "sleep..." << endl;
-//   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-  
-//   res = occupyDevices(1, devicesIdxs, msg);
-
-//   cout << "res: " << res << " msg: " << string(msg) << endl;
-
-//   cout << "sleep..." << endl;
-//   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-
-//   cout << "finished!" << endl;
-
-//   return 0;
-// }
-
