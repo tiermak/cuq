@@ -2,6 +2,7 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include <unistd.h>
 
 #include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -27,6 +28,8 @@ set<int> getAllPhysicallyAvailableDevices() {
 
   set<int> res;
 
+  int currentPid = getpid();
+
   for (i = 0; i < n; i++) {
     nvmlDevice_t dev;
     unsigned int num_procs = 128;
@@ -36,6 +39,12 @@ set<int> getAllPhysicallyAvailableDevices() {
     if (num_procs < 1) {
       res.insert(i);
       // cout << "getAllPhysicallyAvailableDevices:, i: " << i << endl;
+    } else {
+      //also add deviceIdx if current process occupied this device already
+      for (int p = 0; p < num_procs; p++){
+        if (procs[p].pid == currentPid)
+          res.insert(i);
+      }
     }
   }
 

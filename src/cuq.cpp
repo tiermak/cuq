@@ -82,7 +82,7 @@ extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
-  bool deleteTasksAutomatically) {
+  bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
 
     char errorMsg[1000];
     int devices[128];
@@ -90,7 +90,7 @@ void processTasks(
     int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
 
     if (res == 0) {
-      processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, true, deleteTasksAutomatically);
+      processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
     } else {
       std::cerr << errorMsg;
     }
