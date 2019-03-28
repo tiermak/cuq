@@ -7,8 +7,8 @@ Requrements:
 * Conan package manager
 
 ```bash
+conan install .
 mkdir build && cd build
-conan install ..
 cmake ..
 make -j 8
 [sudo] make install # to install library into lib directory and header into include (may require sudo)
