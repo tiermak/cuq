@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
     done[i] = 0;
   }
 
-  processTasks(tasks, tasksCount, devices, devicesCount, /*resetDeviceAfterFinish =*/ true, /*deleteTasksAutomatically =*/ true);
+  processTasksOnDevices(tasks, tasksCount, devices, devicesCount, /*resetDeviceAfterFinish =*/ true, /*deleteTasksAutomatically =*/ true);
 
   //number of finished tasks per device should be more or less equal
   for (int i = 0; i < devicesCount; i++) {

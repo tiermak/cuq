@@ -1,6 +1,7 @@
 #include <thread>
 #include <cuda_runtime.h>
 #include <cuq.h>
+#include <iostream>
 
 GPUTask::~GPUTask() {
 }
@@ -47,7 +48,7 @@ void threadStart(GPUTasksQueue *queue, int device) {
 }
 
 extern "C"
-void processTasks(
+void processTasksOnDevices(
   GPUTask ** tasks, int taskCount, 
   int * devices, int devicesCount, 
   bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
@@ -76,3 +77,21 @@ void deleteTasks(GPUTask** tasks, int taskCount) {
   for (int i = 0; i < taskCount; i++)
     delete tasks[i];
 }
+
+extern "C"
+void processTasks(
+  GPUTask ** tasks, int taskCount,
+  int requestedDevicesCount, 
+  bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+
+    char errorMsg[1000];
+    int devices[128];
+
+    int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
+
+    if (res == 0) {
+      processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
+    } else {
+      std::cerr << errorMsg;
+    }
+  }

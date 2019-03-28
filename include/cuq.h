@@ -21,10 +21,20 @@ class GPUTasksQueue {
 };
 
 extern "C"
-void processTasks(
+void processTasksOnDevices(
   GPUTask ** tasks, int taskCount, 
   int * devices, int devicesCount, 
   bool resetDeviceAfterFinish = true, bool deleteTasksAutomatically = false);
 
 extern "C"
 void deleteTasks(GPUTask** tasks, int taskCount);
+
+extern "C"
+void processTasks(
+  GPUTask ** tasks, int taskCount,
+  int requestedDevicesCount, 
+  bool resetDeviceAfterFinish = true, bool deleteTasksAutomatically = false);
+
+extern "C"
+int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg);
+
