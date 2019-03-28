@@ -35,7 +35,7 @@ set<int> getAllPhysicallyAvailableDevices() {
     NVML( nvmlDeviceGetComputeRunningProcesses(dev, &num_procs, procs) );
     if (num_procs < 1) {
       res.insert(i);
-      cout << "getAllPhysicallyAvailableDevices:, i: " << i << endl;
+      // cout << "getAllPhysicallyAvailableDevices:, i: " << i << endl;
     }
   }
 
@@ -60,7 +60,7 @@ set<int> readCudaVisibleDevices() {
   while (ss >> i){
     res.insert(i);
 
-    cout << "readCudaVisibleDevices:, i: " << i << endl;
+    // cout << "readCudaVisibleDevices:, i: " << i << endl;
 
     if (ss.peek() == ',' || ss.peek() == '"' || ss.peek() == '\'')
       ss.ignore();
