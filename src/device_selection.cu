@@ -13,6 +13,18 @@
 #define NVML(x)  { nvmlReturn_t ret = x; if (ret != NVML_SUCCESS) { printf("NVML error in line %i: %s\n", __LINE__, nvmlErrorString(ret)); \
 exit(8); } }
 
+#define gpuErrchk(code, device, errorMsg) { \
+  if (code != cudaSuccess) { \
+    string msg = "Error while trying to occupy device " + to_string(device) + ". " + string(cudaGetErrorString(code)); \
+    memcpy(errorMsg, msg.c_str(), msg.length()); \
+    return -1; \
+  } \
+}
+
+inline void gpuAssert(cudaError_t code, const char *file, int line) {
+
+}
+
 using namespace std;
 using namespace boost::interprocess;
 
@@ -108,14 +120,12 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
     int nextDeviceIdx = 0;
     for (auto it = availableDevcices.begin(); it != availableDevcices.end(); ++it) {
       int deviceIdx = *it;
-      cudaError_t code = cudaSetDevice(deviceIdx);
+      gpuErrchk( cudaSetDevice(deviceIdx), deviceIdx, errorMsg );
 
-      if (code != cudaSuccess) {
-        string msg = "Error while trying to occupy device " + to_string(deviceIdx) + ". " + string(cudaGetErrorString(code));
-        memcpy(errorMsg, msg.c_str(), msg.length());
-  
-        return -1;
-      }
+      //call some API functions to really occupy device (I'm lazy to look for more elegant way to do it)
+      char * ddata;
+      gpuErrchk( cudaMalloc(&ddata, 1), deviceIdx, errorMsg );
+      gpuErrchk( cudaFree(ddata), deviceIdx, errorMsg );
       
       occupiedDevicesIdxs[nextDeviceIdx++] = deviceIdx;
     }
@@ -128,10 +138,11 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
   return 0;
 }
 
+// #include <chrono>
+// #include <thread>
+
 // int main() {
 //   cout << "startred..." << endl;
-
-//   // named_mutex::remove("process_safe_device_selection_mutex");
 
 //   int devicesIdxs[32];
 //   char msg[1000] = "";
@@ -139,6 +150,16 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
 //   int res = occupyDevices(1, devicesIdxs, msg);
 
 //   cout << "res: " << res << " msg: " << string(msg) << endl;
+
+//   cout << "sleep..." << endl;
+//   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+  
+//   res = occupyDevices(1, devicesIdxs, msg);
+
+//   cout << "res: " << res << " msg: " << string(msg) << endl;
+
+//   cout << "sleep..." << endl;
+//   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
 //   cout << "finished!" << endl;
 
