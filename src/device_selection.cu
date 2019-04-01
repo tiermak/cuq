@@ -103,7 +103,7 @@ extern "C"
 int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg) {
   named_mutex mutex(open_or_create, "process_safe_device_selection_mutex");
   
-  scoped_lock<named_mutex> lock(mutex, try_to_lock);
+  scoped_lock<named_mutex> lock(mutex);
 
   try {
     vector<int> availableDevcices = getAvailableDevices();
