@@ -11,7 +11,7 @@ class CuqConan(ConanFile):
     exports_sources="*"
 
     def build_requirements(self):
-        self.build_requires("boost/1.69.0@conan/stable")
+        self.build_requires("boost/1.65.1@conan/stable")
 
     def build(self):
         cmake = CMake(self)
