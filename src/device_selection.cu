@@ -101,11 +101,11 @@ vector<int> getAvailableDevices() {
 
 extern "C"
 int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg) {
-  named_mutex mutex(open_or_create, "process_safe_device_selection_mutex");
-  
-  scoped_lock<named_mutex> lock(mutex);
-
   try {
+    named_mutex mutex(open_or_create, "process_safe_device_selection_mutex");
+    
+    scoped_lock<named_mutex> lock(mutex);
+
     vector<int> availableDevcices = getAvailableDevices();
 
     if ((int)availableDevcices.size() < requestedDevicesCount) {
