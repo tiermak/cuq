@@ -4,10 +4,8 @@ CUDA multi-GPU concurrent tasks queue
 ## Build
 Requrements:
 * CMake of version 3.10 or higher
-* Conan package manager
 
 ```bash
-conan install .
 mkdir build && cd build
 cmake ..
 make -j 8
