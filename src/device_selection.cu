@@ -4,9 +4,6 @@
 #include <sstream>
 #include <unistd.h>
 
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
 #include <nvml.h>
 #include <cuda_runtime.h>
 
@@ -26,7 +23,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line) {
 }
 
 using namespace std;
-using namespace boost::interprocess;
 
 vector<int> getAllPhysicallyAvailableDevices() {
 
@@ -102,10 +98,6 @@ vector<int> getAvailableDevices() {
 extern "C"
 int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg) {
   try {
-    named_mutex mutex(open_or_create, "process_safe_device_selection_mutex");
-    
-    scoped_lock<named_mutex> lock(mutex);
-
     vector<int> availableDevcices = getAvailableDevices();
 
     if ((int)availableDevcices.size() < requestedDevicesCount) {

@@ -15,11 +15,6 @@ set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wshadow -Wpedantic -Wnon-virtual-dtor -W
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 
 
-
-include(conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
-
-
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 #
@@ -29,7 +24,7 @@ add_library(cuq SHARED
     src/cuq.cpp
     src/device_selection.cu
   )
-target_link_libraries(cuq CONAN_PKG::boost rt cudart nvidia-ml)
+target_link_libraries(cuq rt cudart nvidia-ml)
 
 install(TARGETS cuq DESTINATION lib)
 install(FILES include/cuq.h DESTINATION include)

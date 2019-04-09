@@ -14,7 +14,7 @@ class GPUTasksQueue {
     bool resetDeviceAfterFinish;
     bool deleteTasksAutomatically;
     bool processNext();
-    GPUTasksQueue(GPUTask** tasks, int tasksCount, bool _resetDeviceAfterFinish = true, bool _deleteTasksAutomatically = false);
+    GPUTasksQueue(GPUTask** tasks, int tasksCount, bool _resetDeviceAfterFinish = false, bool _deleteTasksAutomatically = true);
   private:
     std::mutex queueMutex;
     std::queue<GPUTask*> tasksQueue;
@@ -24,7 +24,7 @@ extern "C"
 void processTasksOnDevices(
   GPUTask ** tasks, int taskCount, 
   int * devices, int devicesCount, 
-  bool resetDeviceAfterFinish = true, bool deleteTasksAutomatically = false);
+  bool resetDeviceAfterFinish = false, bool deleteTasksAutomatically = true);
 
 extern "C"
 void deleteTasks(GPUTask** tasks, int taskCount);
@@ -33,7 +33,7 @@ extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
-  bool resetDeviceAfterFinish = true, bool deleteTasksAutomatically = false);
+  bool resetDeviceAfterFinish = false, bool deleteTasksAutomatically = true);
 
 extern "C"
 int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg);
