@@ -1,6 +1,7 @@
 #include <thread>
 #include <cuda_runtime.h>
 #include <cuq.h>
+#include <iostream>
 
 GPUTask::~GPUTask() {
 }
@@ -20,36 +21,48 @@ bool GPUTasksQueue::processNext() {
   
   nextTask->doWork();
 
+  if (deleteTasksAutomatically)
+    delete nextTask;
+
   return true;
 }
 
-GPUTasksQueue::GPUTasksQueue(GPUTask ** tasks, int tasksCount) {
+GPUTasksQueue::GPUTasksQueue(GPUTask ** tasks, int tasksCount, bool _resetDeviceAfterFinish, bool _deleteTasksAutomatically) {
   for (int i = 0; i < tasksCount; i++)
     tasksQueue.push(tasks[i]);
+  
+  resetDeviceAfterFinish = _resetDeviceAfterFinish;
+  deleteTasksAutomatically = _deleteTasksAutomatically;
 }
 
 void threadStart(GPUTasksQueue *queue, int device) {
   //assign current thread to device
   cudaSetDevice(device);
-  
+
   //pull tasks until all of them are finished
   while(queue->processNext()) {};
 
   //release device
-  cudaDeviceReset();
+  if (queue->resetDeviceAfterFinish)
+    cudaDeviceReset();
 }
 
-//TODO handle case when there are no devicesCount free devices available
 extern "C"
-void processTasks(GPUTask ** tasks, int taskCount, int devicesCount) {
+void processTasksOnDevices(
+  GPUTask ** tasks, int taskCount, 
+  int * devices, int devicesCount, 
+  bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+
   //create a queue of GPU tasks (which is thread safe internally)
-  GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount);
+  GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount, resetDeviceAfterFinish, deleteTasksAutomatically);
 
   std::thread * threads = new std::thread[devicesCount];
 
   //start one thread per device
-  for (int d = 0; d < devicesCount; d++)
-    threads[d] = std::thread(threadStart, queue, d);
+  for (int d = 0; d < devicesCount; d++) {
+    int device = devices[d];
+    threads[d] = std::thread(threadStart, queue, device);
+  }
 
   //wait all threads to finish
   for (int d = 0; d < devicesCount; d++)
@@ -64,3 +77,21 @@ void deleteTasks(GPUTask** tasks, int taskCount) {
   for (int i = 0; i < taskCount; i++)
     delete tasks[i];
 }
+
+extern "C"
+void processTasks(
+  GPUTask ** tasks, int taskCount,
+  int requestedDevicesCount, 
+  bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+
+    char errorMsg[1000];
+    int devices[128];
+
+    int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
+
+    if (res == 0) {
+      processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
+    } else {
+      std::cerr << errorMsg;
+    }
+  }

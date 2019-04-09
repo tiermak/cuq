@@ -13,7 +13,7 @@ class CuqConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         self.run("cmake . ")
-        self.run("make -j8")
+        self.run("make -j 8")
 
     def package(self):
         self.copy("*.so", dst="lib", keep_path=False)

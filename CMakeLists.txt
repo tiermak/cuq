@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wshadow -Wpedantic -Wnon-virtual-dtor -Wunused -Wdouble-promotion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 
+
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
 #
@@ -21,9 +22,9 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 #
 add_library(cuq SHARED 
     src/cuq.cpp
+    src/device_selection.cu
   )
-
-target_compile_features(cuq PUBLIC cxx_std_11)
+target_link_libraries(cuq rt cudart nvidia-ml)
 
 install(TARGETS cuq DESTINATION lib)
 install(FILES include/cuq.h DESTINATION include)
@@ -36,5 +37,10 @@ set_target_properties( concurrent_gpu_test
                        POSITION_INDEPENDENT_CODE ON
                       )
 target_link_libraries(concurrent_gpu_test PRIVATE cudart cuq)
+
+#
+# Tests sub directory
+#
+add_subdirectory(tests)
 
 # set(CMAKE_BUILD_TYPE Debug)

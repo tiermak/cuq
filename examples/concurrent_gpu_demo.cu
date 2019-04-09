@@ -9,22 +9,24 @@
 using namespace std;
 
 __global__
-void vectorAdd(float * a, float * b, float * c) {
+void vectorAdd(float * a, float * b, float * c, int iterations) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-  c[i] = a[i] + b[i];
+  for (int j = 0; j < iterations; j++)
+    c[i] = a[i] + b[i];
 }
 
 int done[8];
+int SIZE = 16384;
 
 //Define GPU task by inheriting from GPUTask
 //In fact it should hold data for calculations and code for calculations defined in doWork() method
 class VectorAddTask: public GPUTask {
   public:
     //constructor can be arbitrary
-    VectorAddTask(float * _h_a, float * _h_b, float * _h_c, int _size, int _id) {
+    VectorAddTask(float * _h_a, float * _h_b, float * _h_c, int _iterations, int _id) {
       id = _id;
-      size = _size;
+      iterations = _iterations;
       h_a = _h_a;
       h_b = _h_b;
       h_c = _h_c;
@@ -34,33 +36,30 @@ class VectorAddTask: public GPUTask {
     void doWork() {
       int device;
       cudaGetDevice(&device);
-      cout << "Device: " << device << ", running task: " << id << ", size: " << size << endl;
+      cout << "Device: " << device << ", running task: " << id << ", iterations: " << iterations << endl;
 
-      float * d_a;
-      cudaMalloc(&d_a, size * size * sizeof(float));
-      cudaMemcpy(d_a, h_a, size * size * sizeof(float), cudaMemcpyHostToDevice);
+      cudaMalloc(&d_a, SIZE * sizeof(float));
+      cudaMemcpy(d_a, h_a, SIZE * sizeof(float), cudaMemcpyHostToDevice);
 
-      float * d_b;
-      cudaMalloc(&d_b, size * size * sizeof(float));
-      cudaMemcpy(d_b, h_b, size * size * sizeof(float), cudaMemcpyHostToDevice);
+      cudaMalloc(&d_b, SIZE * sizeof(float));
+      cudaMemcpy(d_b, h_b, SIZE * sizeof(float), cudaMemcpyHostToDevice);
       
-      float * d_c;
-      cudaMalloc(&d_c, size * size * sizeof(float));
+      cudaMalloc(&d_c, SIZE * sizeof(float));
 
-      int blocksCount = (int)ceil((float)size * size / THREADS_PER_BLOCK);
+      int blocksCount = (int)ceil((float)SIZE / THREADS_PER_BLOCK);
       for (int i = 0; i < 1024; i++) {
-        vectorAdd<<<blocksCount,THREADS_PER_BLOCK>>>(d_a, d_b, d_c);
+        vectorAdd<<<blocksCount,THREADS_PER_BLOCK>>>(d_a, d_b, d_c, iterations);
       }
 
-      cudaMemcpy(h_c, d_c, size * size * sizeof(float), cudaMemcpyDeviceToHost);
-      
+      cudaMemcpy(h_c, d_c, SIZE * sizeof(float), cudaMemcpyDeviceToHost);
+
+      cout << "Device: " << device << ", task: " << id << " finished" << ", iterations: " << iterations << endl;
+      //increase number of finished tasks
+      done[device] += 1;
+
       cudaFree(d_a);
       cudaFree(d_b);
       cudaFree(d_c);
-
-      cout << "Device: " << device << ", task: " << id << " finished" << ", size: " << size << endl;
-      //increase number of finished tasks
-      done[device] += 1;
     }
 
     //Destructor is empty in this case
@@ -68,11 +67,15 @@ class VectorAddTask: public GPUTask {
     }
   
   private:
-    int size;
+    int iterations;
     int id;
     float * h_a;
     float * h_b;
     float * h_c;
+    
+    float * d_a;
+    float * d_b;
+    float * d_c;
 };
 
 int pow(int a, int b) {
@@ -83,16 +86,26 @@ int pow(int a, int b) {
   return res;
 }
 
-int main() {
-  int devices = 8;
-  int tasksCount = 128 * 128;
-  int size = 4096;
+int main(int argc, char *argv[]) {
+  int devicesCount;
+  if (argc <= 1)
+    devicesCount = 1;
+  else 
+    devicesCount = std::stoi(argv[1]);
+  
+  int * devices = new int[devicesCount];
+  for (int d = 0; d < devicesCount; d++)
+    devices[d] = d;
 
-  float * h_a = new float[size * size];
-  float * h_b = new float[size * size];
-  float * h_c = new float[size * size];
+  cout << "cuq demo on " << devicesCount << " devices..." << endl;
 
-  for (int i = 0; i < size * size; i++) {
+  int tasksCount = 4096;
+
+  float * h_a = new float[SIZE];
+  float * h_b = new float[SIZE];
+  float * h_c = new float[SIZE];
+
+  for (int i = 0; i < SIZE; i++) {
     h_a[i] = i;
     h_b[i] = i + 100500;
   }
@@ -103,8 +116,8 @@ int main() {
 
   GPUTask ** tasks = new GPUTask *[tasksCount];
   for (int i = 0; i < tasksCount; i++) {
-    //randomize size of task
-    int randSize = size / pow(2, dist(mt));
+    //randomize interations number of task
+    int randSize = SIZE / pow(2, dist(mt));
     tasks[i] = new VectorAddTask(h_a, h_b, h_c, randSize, i);
   }
 
@@ -112,16 +125,14 @@ int main() {
     done[i] = 0;
   }
 
-  processTasks(tasks, tasksCount, devices);
+  processTasksOnDevices(tasks, tasksCount, devices, devicesCount, /*resetDeviceAfterFinish =*/ true, /*deleteTasksAutomatically =*/ true);
 
   //number of finished tasks per device should be more or less equal
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < devicesCount; i++) {
     cout << "Device: " << i << ", done: " << done[i] << endl;
   }
 
-  for (int i = 0; i < tasksCount; i++) {
-    delete tasks[i];
-  }
+  delete[] devices;
   delete[] tasks;
   delete[] h_a;
   delete[] h_b;
