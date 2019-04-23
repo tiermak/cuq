@@ -119,7 +119,7 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
       gpuErrchk( cudaMalloc(&ddata, 1), deviceIdx, errorMsg );
       gpuErrchk( cudaFree(ddata), deviceIdx, errorMsg );
       
-      occupiedDevicesIdxs[nextDeviceIdx++] = deviceIdx;
+      occupiedDevicesIdxs[nextDeviceIdx++] = i;
     }
   } catch (const std::exception& e) {
     auto msg = string(e.what());
