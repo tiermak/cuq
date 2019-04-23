@@ -14,16 +14,6 @@ using namespace std;
 int devices[128];
 char errorMsg[1000];
 
-TEST_CASE("CUDA_VISIBLE_DEVICES in system", "[occupation][CUDA_VISIBLE_DEVICES][curr]") {
-  int deviceCount = 0;
-  cudaGetDeviceCount(&deviceCount);
-  cout << "d count: " << deviceCount << endl;
-
-  CHECK(occupyDevices(4, devices, errorMsg) == 0);
-
-  cout << errorMsg << endl;
-}
-
 TEST_CASE("GPU occupation", "[occupation]") {
   CHECK(occupyDevices(1, devices, errorMsg) == 0);
   CHECK(devices[0] == 0);
