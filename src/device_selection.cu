@@ -112,14 +112,14 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
     int nextDeviceIdx = 0;
     for (int i = 0; i < requestedDevicesCount; i++) {
       int deviceIdx = availableDevcices[i];
-      gpuErrchk( cudaSetDevice(deviceIdx), deviceIdx, errorMsg );
+      gpuErrchk( cudaSetDevice(i), deviceIdx, errorMsg );
 
       //call some API functions to really occupy device (I'm lazy to look for more elegant way to do it)
       char * ddata;
       gpuErrchk( cudaMalloc(&ddata, 1), deviceIdx, errorMsg );
       gpuErrchk( cudaFree(ddata), deviceIdx, errorMsg );
       
-      occupiedDevicesIdxs[nextDeviceIdx++] = deviceIdx;
+      occupiedDevicesIdxs[nextDeviceIdx++] = i;
     }
   } catch (const std::exception& e) {
     auto msg = string(e.what());
