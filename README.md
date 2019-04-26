@@ -29,8 +29,7 @@ processTasks(tasks, N, devicesCount);
 //then get results back from tasks
 ...
 
-//delete tasks after all calculations are done
-deleteTasks(tasks, N);
+//there is a flag in processTasks to delete tasks automatically
 ```
 
 ## Working demo

@@ -2,6 +2,10 @@
 #include <cuda_runtime.h>
 #include <cuq.h>
 #include <iostream>
+#include <signal.h>
+#include <cummon.hpp>
+
+using namespace std;
 
 GPUTask::~GPUTask() {
 }
@@ -78,20 +82,29 @@ void deleteTasks(GPUTask** tasks, int taskCount) {
     delete tasks[i];
 }
 
+
+void signalHandler(int sig) {
+  auto msg = "Error: signal " + to_string(sig);
+  printStackTrace(msg);
+  exit(EXIT_FAILURE);
+}
+
 extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
   bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+    
+  signal(SIGSEGV, signalHandler);
+  
+  char errorMsg[1000];
+  int devices[128];
 
-    char errorMsg[1000];
-    int devices[128];
+  int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
 
-    int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
-
-    if (res == 0) {
-      processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
-    } else {
-      std::cerr << errorMsg;
-    }
+  if (res == 0) {
+    processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
+  } else {
+    std::cerr << errorMsg;
   }
+}
