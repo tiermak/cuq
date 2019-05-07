@@ -18,10 +18,6 @@ exit(8); } }
   } \
 }
 
-inline void gpuAssert(cudaError_t code, const char *file, int line) {
-
-}
-
 using namespace std;
 
 vector<int> getAllPhysicallyAvailableDevices() {

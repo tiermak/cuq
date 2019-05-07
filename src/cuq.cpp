@@ -2,6 +2,11 @@
 #include <cuda_runtime.h>
 #include <cuq.h>
 #include <iostream>
+#include <signal.h>
+#include <execinfo.h>
+#include <unistd.h>
+
+using namespace std;
 
 GPUTask::~GPUTask() {
 }
@@ -47,7 +52,6 @@ void threadStart(GPUTasksQueue *queue, int device) {
     cudaDeviceReset();
 }
 
-extern "C"
 void processTasksOnDevices(
   GPUTask ** tasks, int taskCount, 
   int * devices, int devicesCount, 
@@ -78,20 +82,40 @@ void deleteTasks(GPUTask** tasks, int taskCount) {
     delete tasks[i];
 }
 
+inline void printStackTrace(string msg) {
+  void *array[20];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 20);
+
+  // print out all the frames to stderr
+  cerr << msg << endl;
+  backtrace_symbols_fd(&array[1], size - 1, STDERR_FILENO);
+}
+
+void signalHandler(int sig) {
+  auto msg = "Error: signal " + to_string(sig);
+  printStackTrace(msg);
+  exit(EXIT_FAILURE);
+}
+
 extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
   bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+    
+  signal(SIGSEGV, signalHandler);
+  
+  char errorMsg[1000];
+  int devices[128];
 
-    char errorMsg[1000];
-    int devices[128];
+  int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
 
-    int res = occupyDevices(requestedDevicesCount, devices, errorMsg);
-
-    if (res == 0) {
-      processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
-    } else {
-      std::cerr << errorMsg;
-    }
+  if (res == 0) {
+    processTasksOnDevices(tasks, taskCount, devices, requestedDevicesCount, resetDeviceAfterFinish, deleteTasksAutomatically);
+  } else {
+    std::cerr << errorMsg;
   }
+}

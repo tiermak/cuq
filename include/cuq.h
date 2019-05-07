@@ -21,12 +21,6 @@ class GPUTasksQueue {
 };
 
 extern "C"
-void processTasksOnDevices(
-  GPUTask ** tasks, int taskCount, 
-  int * devices, int devicesCount, 
-  bool resetDeviceAfterFinish = false, bool deleteTasksAutomatically = true);
-
-extern "C"
 void deleteTasks(GPUTask** tasks, int taskCount);
 
 extern "C"
