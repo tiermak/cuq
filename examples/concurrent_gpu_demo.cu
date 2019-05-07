@@ -92,10 +92,6 @@ int main(int argc, char *argv[]) {
     devicesCount = 1;
   else 
     devicesCount = std::stoi(argv[1]);
-  
-  int * devices = new int[devicesCount];
-  for (int d = 0; d < devicesCount; d++)
-    devices[d] = d;
 
   cout << "cuq demo on " << devicesCount << " devices..." << endl;
 
@@ -125,14 +121,13 @@ int main(int argc, char *argv[]) {
     done[i] = 0;
   }
 
-  processTasksOnDevices(tasks, tasksCount, devices, devicesCount, /*resetDeviceAfterFinish =*/ true, /*deleteTasksAutomatically =*/ true);
+  processTasks(tasks, tasksCount, devicesCount, /*resetDeviceAfterFinish =*/ true, /*deleteTasksAutomatically =*/ true);
 
   //number of finished tasks per device should be more or less equal
   for (int i = 0; i < devicesCount; i++) {
     cout << "Device: " << i << ", done: " << done[i] << endl;
   }
 
-  delete[] devices;
   delete[] tasks;
   delete[] h_a;
   delete[] h_b;
