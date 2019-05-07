@@ -3,7 +3,8 @@
 #include <cuq.h>
 #include <iostream>
 #include <signal.h>
-#include <cummon.hpp>
+#include <execinfo.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -51,11 +52,31 @@ void threadStart(GPUTasksQueue *queue, int device) {
     cudaDeviceReset();
 }
 
+inline void printStackTrace(string msg) {
+  void *array[20];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 20);
+
+  // print out all the frames to stderr
+  cerr << msg << endl;
+  backtrace_symbols_fd(&array[1], size - 1, STDERR_FILENO);
+}
+
+void signalHandler(int sig) {
+  auto msg = "Error: signal " + to_string(sig);
+  printStackTrace(msg);
+  exit(EXIT_FAILURE);
+}
+
 extern "C"
 void processTasksOnDevices(
   GPUTask ** tasks, int taskCount, 
   int * devices, int devicesCount, 
   bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+    
+  signal(SIGSEGV, signalHandler);
 
   //create a queue of GPU tasks (which is thread safe internally)
   GPUTasksQueue *queue = new GPUTasksQueue(tasks, taskCount, resetDeviceAfterFinish, deleteTasksAutomatically);
@@ -82,20 +103,11 @@ void deleteTasks(GPUTask** tasks, int taskCount) {
     delete tasks[i];
 }
 
-
-void signalHandler(int sig) {
-  auto msg = "Error: signal " + to_string(sig);
-  printStackTrace(msg);
-  exit(EXIT_FAILURE);
-}
-
 extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
   bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
-    
-  signal(SIGSEGV, signalHandler);
   
   char errorMsg[1000];
   int devices[128];

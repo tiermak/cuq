@@ -78,11 +78,3 @@ TEST_CASE("More GPUs than exists on the machine are requested", "[occupation]") 
 
   CHECK(occupyDevices(realDeviceCount + 1, devices, errorMsg) == -1);
 }
-
-TEST_CASE("Something unreal is in CUDA_VISIBLE_DEVICES=32", "[occupation][CUDA_VISIBLE_DEVICES]") {
-  putenv((char*)"CUDA_VISIBLE_DEVICES=32");
-
-  CHECK(occupyDevices(1, devices, errorMsg) == -1);
-
-  putenv((char*)"CUDA_VISIBLE_DEVICES=");
-}

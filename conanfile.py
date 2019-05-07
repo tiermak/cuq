@@ -11,4 +11,3 @@ class Conan(bcd_conan_recipe.BcdConanRecipe):
     default_options = "shared=False"
     generators = "cmake"
     exports_sources="*"
-    requires = "cummon/v0.3.0@biocad/biocad"
