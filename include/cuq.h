@@ -27,7 +27,7 @@ extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
-  bool resetDeviceAfterFinish = false, bool deleteTasksAutomatically = true);
+  bool resetDeviceAfterFinish = false, bool deleteTasksAutomatically = true, bool handleSignals = true);
 
 extern "C"
 int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg);
