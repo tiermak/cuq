@@ -104,9 +104,10 @@ extern "C"
 void processTasks(
   GPUTask ** tasks, int taskCount,
   int requestedDevicesCount, 
-  bool resetDeviceAfterFinish, bool deleteTasksAutomatically) {
+  bool resetDeviceAfterFinish, bool deleteTasksAutomatically, bool handleSignals) {
     
-  signal(SIGSEGV, signalHandler);
+  if (handleSignals)
+    signal(SIGSEGV, signalHandler);
   
   char errorMsg[1000];
   int devices[128];
