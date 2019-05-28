@@ -10,13 +10,21 @@ class GPUTask {
     virtual ~GPUTask();
 };
 
+template <class T>
 class LambdaGPUTask : public GPUTask {
-  public: 
-    LambdaGPUTask(std::function<void()> _gpuCalculations);
-    void doWork();
+  public:
+    LambdaGPUTask(T _params, std::function<void(T)> _gpuCalculations) {
+      params = _params;
+      gpuCalculations = _gpuCalculations;
+    }
+
+    void doWork() {
+      gpuCalculations(params);
+    }
 
   private:
-    std::function<void()> gpuCalculations;
+    T params;
+    std::function<void(T)> gpuCalculations;
 };
 
 class GPUTasksQueue {

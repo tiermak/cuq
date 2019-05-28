@@ -11,14 +11,6 @@ using namespace std;
 GPUTask::~GPUTask() {
 }
 
-LambdaGPUTask::LambdaGPUTask(std::function<void()> _gpuCalculations) {
-  gpuCalculations = _gpuCalculations;
-}
-
-void LambdaGPUTask::doWork() {
-  gpuCalculations();
-}
-
 bool GPUTasksQueue::processNext() {
   queueMutex.lock();
   
