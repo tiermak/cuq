@@ -8,6 +8,20 @@
 
 using namespace std;
 
+int calculationsCount(int localI, int groupSize, int wholeSize) {
+  int startingIndex = localI * groupSize;
+
+  if (startingIndex < wholeSize - groupSize) //we are not close to an end of our data
+    return groupSize;
+
+  int rest = wholeSize - startingIndex;
+
+  if (rest >= 0) //the last chunk of the data
+    return rest;
+
+  return 0; //the data ended, nothing more to process
+}
+
 GPUTask::~GPUTask() {
 }
 
