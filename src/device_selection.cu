@@ -86,6 +86,8 @@ vector<int> readCudaVisibleDevices() {
 pair<vector<int>, bool> getAvailableDevices() {
   vector<int> visibleDevices = readCudaVisibleDevices();
 
+  // cout << ">>>>> visibleDevices.empty()" << visibleDevices.empty() << endl; 
+
   if (visibleDevices.empty())
     return make_pair(getAllPhysicallyAvailableDevices(), false);
 
@@ -122,7 +124,7 @@ int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * e
       gpuErrchk( cudaMalloc(&ddata, 1), deviceIdx, errorMsgOut );
       gpuErrchk( cudaFree(ddata), deviceIdx, errorMsgOut );
       
-      occupiedDevicesIdxs[nextDeviceIdx++] = i;
+      occupiedDevicesIdxs[nextDeviceIdx++] = deviceIdx;
     }
   } catch (const std::exception& e) {
     auto msg = string(e.what());
