@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <utility>
 #include <unistd.h>
 
 #include <nvml.h>
@@ -82,44 +83,50 @@ vector<int> readCudaVisibleDevices() {
   return res;
 }
 
-vector<int> getAvailableDevices() {
+pair<vector<int>, bool> getAvailableDevices() {
   vector<int> visibleDevices = readCudaVisibleDevices();
 
   if (visibleDevices.empty())
-    return getAllPhysicallyAvailableDevices();
+    return make_pair(getAllPhysicallyAvailableDevices(), false);
 
-  return visibleDevices;
+  return make_pair(visibleDevices, true);
 }
 
 extern "C"
-int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsg) {
+int occupyDevices(int requestedDevicesCount, int * occupiedDevicesIdxs, char * errorMsgOut) {
   try {
-    vector<int> availableDevcices = getAvailableDevices();
+    auto availableDevcicesPair = getAvailableDevices();
+    auto availableDevices = availableDevcicesPair.first;
+    bool cudaVisibleDevciesSetProperly = availableDevcicesPair.second;
 
-    if ((int)availableDevcices.size() < requestedDevicesCount) {
+    if ((int)availableDevices.size() < requestedDevicesCount) {
       string msg = "There are not as many free devices as requested. Requested devices count: " 
-        + to_string(requestedDevicesCount) + ". Available devices count: " + to_string(availableDevcices.size()) + ".";
+        + to_string(requestedDevicesCount) + ". Available devices count: " + to_string(availableDevices.size()) + ".";
       
-      memcpy(errorMsg, msg.c_str(), msg.length());
+      memcpy(errorMsgOut, msg.c_str(), msg.length());
 
       return -1;
     }
 
     int nextDeviceIdx = 0;
     for (int i = 0; i < requestedDevicesCount; i++) {
-      int deviceIdx = availableDevcices[i];
-      gpuErrchk( cudaSetDevice(i), deviceIdx, errorMsg );
+      int deviceIdx = -1;
+      if (cudaVisibleDevciesSetProperly)
+        deviceIdx = i;
+      else 
+        deviceIdx = availableDevices[i];
+      gpuErrchk( cudaSetDevice(deviceIdx), deviceIdx, errorMsgOut );
 
       //call some API functions to really occupy device (I'm lazy to look for more elegant way to do it)
       char * ddata;
-      gpuErrchk( cudaMalloc(&ddata, 1), deviceIdx, errorMsg );
-      gpuErrchk( cudaFree(ddata), deviceIdx, errorMsg );
+      gpuErrchk( cudaMalloc(&ddata, 1), deviceIdx, errorMsgOut );
+      gpuErrchk( cudaFree(ddata), deviceIdx, errorMsgOut );
       
       occupiedDevicesIdxs[nextDeviceIdx++] = i;
     }
   } catch (const std::exception& e) {
     auto msg = string(e.what());
-    memcpy(errorMsg, msg.c_str(), msg.length());
+    memcpy(errorMsgOut, msg.c_str(), msg.length());
     return -1;
   }
 
