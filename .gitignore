@@ -53,6 +53,9 @@ build
 #Visual studio code
 .vscode
 
+#CLion
+.idea
+
 # Local scripts for rsync and remote run
 rsync_exclude.txt
 run_remote.sh

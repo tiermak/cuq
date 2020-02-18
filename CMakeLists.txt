@@ -44,4 +44,7 @@ target_link_libraries(concurrent_gpu_test PRIVATE cudart cuq)
 #
 add_subdirectory(tests)
 
+include(CTest)
+add_test (all_tests tests/all_tests)
+
 # set(CMAKE_BUILD_TYPE Debug)

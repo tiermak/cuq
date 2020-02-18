@@ -1,8 +1,6 @@
-from conans import ConanFile, CMake, tools, python_requires
+from conans import ConanFile
 
-bcd_conan_recipe = python_requires("BcdConanRecipe/v1.0.0@biocad/biocad")
-
-class Conan(bcd_conan_recipe.BcdConanRecipe):
+class Conan(ConanFile):
     name = "cuq"
     url = "https://github.com/PianeRamso/cuq"
     description = "CUDA multi-GPU concurrent tasks queue"
@@ -11,3 +9,5 @@ class Conan(bcd_conan_recipe.BcdConanRecipe):
     default_options = "shared=False"
     generators = "cmake"
     exports_sources="*"
+    python_requires = "BcdConanRecipe/v1.0.0@biocad/biocad"
+    python_requires_extend ="BcdConanRecipe.BcdConanRecipe"
