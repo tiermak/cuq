@@ -1,0 +1,26 @@
+stages:
+  - build
+  - deploy 
+    
+build-test:
+  extends: .cuda-build-test
+
+build-test-upload:
+  extends: .cuda-build-test-upload
+
+deploy-hpc:
+  extends: .cuda-deploy-hpc
+  
+include:
+  - project: 'biocad/bcd-ci-common'
+    ref: master
+    file: '/build/cuda/build-test.yaml'
+  
+  - project: 'biocad/bcd-ci-common'
+    ref: master
+    file: '/build/cuda/build-test-upload.yaml'
+  
+  - project: 'biocad/bcd-ci-common'
+    ref: master
+    file: '/build/cuda/cuda-deploy.yaml'
+  
