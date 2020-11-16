@@ -1,8 +1,9 @@
+#pragma once
+
 #include <mutex>
 #include <queue>
 #include <functional>
 
-#pragma once
 
 class GPUTask {
   public:

@@ -1,11 +1,12 @@
-include_directories("${PROJECT_SOURCE_DIR}/tests")
+cmake_minimum_required(VERSION 3.10)
 
-add_executable(all_tests
-  device_selection/device_selection_tests.cu
-)
-
-set_target_properties(all_tests PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        POSITION_INDEPENDENT_CODE ON
+add_executable(device_selection_test
+        device_selection/device_selection_tests.cu
         )
-target_link_libraries(all_tests PRIVATE cuq cudart)
+target_include_directories(device_selection_test PRIVATE catch2)
+
+target_link_libraries(device_selection_test cuq)
+add_test(
+        NAME device_selection_test
+        COMMAND device_selection_test
+)
